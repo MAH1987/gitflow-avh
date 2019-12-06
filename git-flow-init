@@ -68,6 +68,7 @@ d,[no]defaults      Use default branch naming conventions
 f,[no]force         Force setting of gitflow branches, even if already configured
 
 p,feature!          Feature branches
+i,ticket!           Ticket branches
 b,bugfix!           Bugfix branches
 r,release!          Release branches
 x,hotfix!           Hotfix branches
@@ -91,6 +92,7 @@ file=    use given config file
 	DEFINE_boolean 'system' false 'use system config file'
 	DEFINE_string 'file' "" 'use given config file'
 	DEFINE_string 'feature' "" 'feature branches' p
+	DEFINE_string 'ticket' "" 'ticket branches' p
 	DEFINE_string 'bugfix' "" 'bugfix branches' b
 	DEFINE_string 'release' "" 'release branches' r
 	DEFINE_string 'hotfix' "" 'hotfix branches' x
@@ -295,6 +297,7 @@ file=    use given config file
 	# Ask the user for naming conventions (branch and tag prefixes )
 	if flag force || \
 		! git config --get gitflow.prefix.feature >/dev/null 2>&1 ||
+		! git config --get gitflow.prefix.ticket >/dev/null 2>&1 ||
 		! git config --get gitflow.prefix.bugfix >/dev/null 2>&1 ||
 		! git config --get gitflow.prefix.release >/dev/null 2>&1 ||
 		! git config --get gitflow.prefix.hotfix >/dev/null 2>&1 ||
@@ -319,6 +322,23 @@ file=    use given config file
 		fi
 		[ "$answer" = "-" ] && prefix= || prefix=${answer:-$default_suggestion}
 		git_do config $gitflow_config_option gitflow.prefix.feature "$prefix"
+	fi
+
+	# Ticket branches
+	if ! git config --get gitflow.prefix.ticket >/dev/null 2>&1 || flag force; then
+	    if [ "$FLAGS_ticket" != "" ]; then
+	        default_suggestion=$(echo $FLAGS_ticket)
+        else
+	    	default_suggestion=$(git config --get --system gitflow.prefix.ticket || git config --get --global gitflow.prefix.ticket || echo ticket/)
+        fi
+		printf "Ticket branches? [$default_suggestion] "
+		if noflag defaults; then
+			read answer
+		else
+			printf "\n"
+		fi
+		[ "$answer" = "-" ] && prefix= || prefix=${answer:-$default_suggestion}
+		git_do config $gitflow_config_option gitflow.prefix.ticket "$prefix"
 	fi
 
 	# Bugfix branches
@@ -388,7 +408,7 @@ file=    use given config file
 		[ "$answer" = "-" ] && prefix= || prefix=${answer:-$default_suggestion}
 		git_do config $gitflow_config_option gitflow.prefix.support "$prefix"
 	fi
-	
+
 	# Version tag prefix
 	if ! git config --get gitflow.prefix.versiontag >/dev/null 2>&1 || flag force; then
 	    if [ "$FLAGS_tag" != "" ]; then
